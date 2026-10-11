@@ -38,8 +38,9 @@ This represents the product of 3+4i and 2-5i followed by adding 1+2i; the
 independently calculated result is 27-5i. All five requested reference cases
 are expressible in this grammar and covered at operation and integration levels.
 
-An operand needs an integer real component, an imaginary sign, an optional
-nonnegative integer coefficient, and lowercase `i`. Examples: `-2-3i`,
+The parser's current regular expression requires an integer-form real component,
+an imaginary sign, an optional nonnegative integer-form coefficient, and
+lowercase `i`. These components are stored as floats. Examples: `-2-3i`,
 `+2+i`, `0+0i`, and `3+4*i`. Whitespace inside an operand is removed;
 operator arguments are trimmed. Quote operands containing spaces in the shell.
 The parser removes asterisks inside operand arguments; multiplication between
@@ -48,6 +49,10 @@ operands still needs a separate `"*"` argument.
 Bare reals, bare imaginary numbers, decimal components, a whole expression in
 one argument, and unregistered operators are unsupported. The application
 intentionally does not accept parenthesized input; no test requires it.
+Although `Float.parseFloat` is now used, the regular expression still rejects
+decimal points and exponent notation. Fractional constructor/operation tests
+therefore use the float API directly; integration tests obtain fractional
+results by dividing operands in the supported input grammar.
 
 The parser preserves operator order. The evaluator applies multiplication and
 division (precedence 2) before addition and subtraction (precedence 1), and
@@ -56,11 +61,19 @@ equal-precedence operations associate left to right.
 ## Test expectations
 
 Expected arithmetic results are literal independently calculated values.
-Complex results are checked by both components. Components and constructors
-are `int`, so no fractional component API or floating-point tolerance is
-applicable. Division cases have exact integer results and avoid imposing a
-rounding policy. No exact division-by-zero exception contract exists, so
+Complex results are checked by both float components. The shared assertion uses
+an absolute tolerance of `1e-6f` near zero and a relative tolerance of `1e-6f`
+for larger expected values; `1e-9` would be too strict for general float
+arithmetic. Cases cover fractional inputs, decimal rounding such as
+0.1 + 0.2, and nonintegral division including one third. Constructors also
+cover finite float extremes, with exact checks for the smallest nonzero float.
+Parser cases beyond the integer range now expect successful float parsing and
+float rounding, rather than an integer overflow exception.
+
+No exact division-by-zero exception contract exists, so
 tests require an unchecked failure without prescribing a specific subtype.
 
-Production bugs must remain failing tests. No tests are disabled or weakened
-to accommodate the division stub.
+Production bugs must remain failing tests. Zero division and truncation of
+negative fractional imaginary components in `toString()` remain covered.
+String expectations follow the existing whole-number formatting while
+requiring fractional magnitudes to be preserved.

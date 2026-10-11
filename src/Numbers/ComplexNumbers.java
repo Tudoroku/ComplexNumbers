@@ -1,25 +1,25 @@
 package Numbers;
 
 public class ComplexNumbers {
-    private int real;
-    private int imaginary;
+    private float real;
+    private float imaginary;
 
-    public ComplexNumbers(int real, int imaginary) {
+    public ComplexNumbers(float real, float imaginary) {
         this.real = real;
         this.imaginary = imaginary;
     }
 
-    public int getRealPart() {
+    public float getRealPart() {
         return real;
     }
 
-    public int getImaginaryPart() {
+    public float getImaginaryPart() {
         return imaginary;
     }
 
     public String toString() {
         if (imaginary < 0) {
-            return real + " - " + (-(long)imaginary) + "i";
+            return real + " - " + (-imaginary) + "i";
         }
         return real + " + " + imaginary + "i";
     }

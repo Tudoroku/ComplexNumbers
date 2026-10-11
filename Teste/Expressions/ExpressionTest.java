@@ -12,8 +12,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class ExpressionTest {
     @Test
     void constructorStoresOperandsAndOperationsInOrder() {
-        ComplexNumbers first = new ComplexNumbers(2, 3);
-        ComplexNumbers second = new ComplexNumbers(4, -5);
+        ComplexNumbers first = new ComplexNumbers(2.5f, 3.75f);
+        ComplexNumbers second = new ComplexNumbers(4.25f, -5.5f);
         ComplexNumbers third = new ComplexNumbers(0, 0);
         Operation add = new AddOperation();
         Operation subtract = new SubtractOperation();
@@ -21,6 +21,8 @@ class ExpressionTest {
         assertEquals(List.of(first, second, third), expression.getOperands());
         assertEquals(List.of(add, subtract), expression.getOperations());
         assertEquals(expression.getOperations().size() + 1, expression.getOperands().size());
+        assertComplex(2.5f, 3.75f, expression.getOperands().get(0));
+        assertComplex(4.25f, -5.5f, expression.getOperands().get(1));
     }
 
     @Test

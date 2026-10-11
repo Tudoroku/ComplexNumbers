@@ -15,7 +15,7 @@ class ComplexParserTest {
     @CsvSource({"'2+3i',2,3", "'4-5i',4,-5", "'-2+3i',-2,3", "'-2-3i',-2,-3",
             "'+2+i',2,1", "'1-i',1,-1", "'0+0i',0,0", "'-0-0i',0,0",
             "'0-7i',0,-7", "'7+0i',7,0", "'3+4*i',3,4", "'-3-i',-3,-1"})
-    void parsesSupportedIntegerForms(String text, int real, int imaginary) {
+    void parsesSupportedIntegerFormsAsFloatComponents(String text, float real, float imaginary) {
         assertComplex(real, imaginary, assertDoesNotThrow(() -> parser.parse(text)));
     }
 
@@ -42,8 +42,9 @@ class ComplexParserTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"'2147483648+0i'", "'0+2147483648i'", "'-2147483649+0i'"})
-    void rejectsComponentsOutsideIntegerRange(String text) {
-        assertThrows(NumberFormatException.class, () -> parser.parse(text));
+    @CsvSource({"'2147483648+0i',2147483648,0", "'0+2147483648i',0,2147483648",
+            "'-2147483649+0i',-2147483648,0"})
+    void parsesComponentsBeyondIntegerRangeWithFloatRounding(String text, float real, float imaginary) {
+        assertComplex(real, imaginary, assertDoesNotThrow(() -> parser.parse(text)));
     }
 }

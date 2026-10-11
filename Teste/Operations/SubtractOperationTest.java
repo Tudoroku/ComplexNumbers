@@ -17,9 +17,11 @@ class SubtractOperationTest {
             "0,0,-2,3,2,-3",
             "-2,3,0,0,-2,3",
             "-2,-3,-4,-5,2,2",
-            "0,0,0,0,0,0"})
-    void calculatesComponentsWithoutMutatingOperands(int ar, int ai, int br, int bi,
-                                                     int real, int imaginary) {
+            "0,0,0,0,0,0",
+            "1.25,-2.5,-0.75,0.5,2,-3",
+            "0.3,0.2,0.1,0.1,0.2,0.1"})
+    void calculatesComponentsWithoutMutatingOperands(float ar, float ai, float br, float bi,
+                                                     float real, float imaginary) {
         ComplexNumbers left = new ComplexNumbers(ar, ai);
         ComplexNumbers right = new ComplexNumbers(br, bi);
         ComplexNumbers result = operation.apply(left, right);

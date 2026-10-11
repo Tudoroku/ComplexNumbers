@@ -22,13 +22,17 @@ class ExpressionEvaluatorTest {
                 Arguments.of(new AddOperation(), 2, 3, 4, -5, 6, -2),
                 Arguments.of(new SubtractOperation(), 3, 4, 3, 4, 0, 0),
                 Arguments.of(new MultiplyOperation(), 1, 1, 1, -1, 2, 0),
-                Arguments.of(new DivideOperation(), 3, 4, 1, -2, -1, 2));
+                Arguments.of(new DivideOperation(), 3, 4, 1, -2, -1, 2),
+                Arguments.of(new AddOperation(), 0.1f, 0.2f, 0.2f, 0.1f, 0.3f, 0.3f),
+                Arguments.of(new SubtractOperation(), 1.25f, -2.5f, -0.75f, 0.5f, 2f, -3f),
+                Arguments.of(new MultiplyOperation(), 1.5f, 0.5f, 0.5f, -1f, 1.25f, -1.25f),
+                Arguments.of(new DivideOperation(), 1.5f, 0.5f, 0.5f, -1f, 0.2f, 1.4f));
     }
 
     @ParameterizedTest
     @MethodSource("individualOperations")
-    void evaluatesDirectlyConstructedExpression(Operation operation, int ar, int ai,
-                                               int br, int bi, int real, int imaginary) {
+    void evaluatesDirectlyConstructedExpression(Operation operation, float ar, float ai,
+                                               float br, float bi, float real, float imaginary) {
         Expression expression = new Expression(
                 List.of(new ComplexNumbers(ar, ai), new ComplexNumbers(br, bi)), List.of(operation));
         assertComplex(real, imaginary, evaluator.evaluate(expression));
@@ -52,12 +56,17 @@ class ExpressionEvaluatorTest {
                 Arguments.of(new String[]{"8+0i", "/", "2+0i", "*", "3+0i"}, 12, 0),
                 Arguments.of(new String[]{"8+0i", "*", "2+0i", "/", "4+0i"}, 4, 0),
                 Arguments.of(new String[]{"1+0i", "+", "8+0i", "/", "2+0i"}, 5, 0),
-                Arguments.of(new String[]{"1+0i", "+", "6+0i", "*", "2+0i", "-", "8+0i", "/", "4+0i"}, 11, 0));
+                Arguments.of(new String[]{"1+0i", "+", "6+0i", "*", "2+0i", "-", "8+0i", "/", "4+0i"}, 11, 0),
+                Arguments.of(new String[]{"1+0i", "/", "2+0i"}, 0.5f, 0f),
+                Arguments.of(new String[]{"1+i", "/", "2-i"}, 0.2f, 0.6f),
+                Arguments.of(new String[]{"1+0i", "/", "3+0i"}, 0.3333333333f, 0f),
+                Arguments.of(new String[]{"1+0i", "+", "1+0i", "/", "2+0i", "*", "3+0i"}, 2.5f, 0f),
+                Arguments.of(new String[]{"1+0i", "/", "2+0i", "/", "4+0i"}, 0.125f, 0f));
     }
 
     @ParameterizedTest
     @MethodSource("expressions")
-    void integratesParserRegistryAndEvaluator(String[] tokens, int real, int imaginary) {
+    void integratesParserRegistryAndEvaluator(String[] tokens, float real, float imaginary) {
         assertComplex(real, imaginary, evaluator.evaluate(parser.parse(tokens)));
     }
 
@@ -103,4 +112,5 @@ class ExpressionEvaluatorTest {
         assertThrows(RuntimeException.class,
                 () -> evaluator.evaluate(parser.parse(new String[]{"3+4i", "/", "0+0i"})));
     }
+
 }

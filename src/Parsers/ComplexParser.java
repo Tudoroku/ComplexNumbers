@@ -26,16 +26,16 @@ public class ComplexParser {
             );
         }
 
-        int realPart =
-                Integer.parseInt(matcher.group(1));
+        float realPart =
+                Float.parseFloat(matcher.group(1));
 
         String sign = matcher.group(2);
         String coefficient = matcher.group(3);
 
-        int imaginaryPart =
+        float imaginaryPart =
                 coefficient.isEmpty()
                         ? 1
-                        : Integer.parseInt(coefficient);
+                        : Float.parseFloat(coefficient);
 
         if (sign.equals("-")) {
             imaginaryPart = -imaginaryPart;

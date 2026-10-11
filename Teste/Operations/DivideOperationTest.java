@@ -18,9 +18,13 @@ class DivideOperationTest {
             "3,4,3,4,1,0",
             "0,6,0,2,3,0",
             "-6,2,-2,0,3,-1",
-            "2,4,2,0,1,2"})
-    void calculatesComponentsWithoutMutatingOperands(int ar, int ai, int br, int bi,
-                                                     int real, int imaginary) {
+            "2,4,2,0,1,2",
+            "1,0,2,0,0.5,0",
+            "1,0,3,0,0.3333333333,0",
+            "1,1,2,-1,0.2,0.6",
+            "1.5,0.5,0.5,-1,0.2,1.4"})
+    void calculatesComponentsWithoutMutatingOperands(float ar, float ai, float br, float bi,
+                                                     float real, float imaginary) {
         ComplexNumbers left = new ComplexNumbers(ar, ai);
         ComplexNumbers right = new ComplexNumbers(br, bi);
         ComplexNumbers result = operation.apply(left, right);
@@ -38,8 +42,8 @@ class DivideOperationTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"3,4", "0,0", "-2,-3"})
-    void rejectsZeroDivisor(int real, int imaginary) {
+    @CsvSource({"3,4", "0,0", "-2,-3", "0.25,-0.5"})
+    void rejectsZeroDivisor(float real, float imaginary) {
         // The implementation has no documented exception contract.
         assertThrows(RuntimeException.class, () -> operation.apply(
                 new ComplexNumbers(real, imaginary), new ComplexNumbers(0, 0)));
