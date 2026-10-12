@@ -1,118 +1,78 @@
 package Expressions;
 
 import Numbers.ComplexNumbers;
-import Operations.*;
-import Parsers.*;
+import Operations.AddOperation;
+import Operations.DivideOperation;
+import Operations.MultiplyOperation;
+import Operations.OperatorRegistry;
+import Operations.SubtractOperation;
+import Parsers.ComplexParser;
+import Parsers.ExpressionParser;
 import Validators.ExpressionArgumentsValidator;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-import java.util.List;
-import java.util.stream.Stream;
 
-import static Support.TestSupport.*;
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ExpressionEvaluatorTest {
-    private final ExpressionEvaluator evaluator = new ExpressionEvaluator();
-    private final ExpressionArgumentsValidator validator = new ExpressionArgumentsValidator();
-    private final ExpressionParser parser = new ExpressionParser(new ComplexParser(), registry(), validator);
+    @Test
+    void evaluatesRequiredExpressionThroughParser() {
+        OperatorRegistry registry = new OperatorRegistry();
+        registry.register(new MultiplyOperation());
+        registry.register(new AddOperation());
+        ExpressionParser parser = new ExpressionParser(
+                new ComplexParser(), registry, new ExpressionArgumentsValidator());
+        Expression expression = parser.parse(
+                new String[]{"3+4i", "*", "2-5i", "+", "1+2i"});
 
-    static Stream<Arguments> individualOperations() {
-        return Stream.of(
-                Arguments.of(new AddOperation(), 2, 3, 4, -5, 6, -2),
-                Arguments.of(new SubtractOperation(), 3, 4, 3, 4, 0, 0),
-                Arguments.of(new MultiplyOperation(), 1, 1, 1, -1, 2, 0),
-                Arguments.of(new DivideOperation(), 3, 4, 1, -2, -1, 2),
-                Arguments.of(new AddOperation(), 0.1f, 0.2f, 0.2f, 0.1f, 0.3f, 0.3f),
-                Arguments.of(new SubtractOperation(), 1.25f, -2.5f, -0.75f, 0.5f, 2f, -3f),
-                Arguments.of(new MultiplyOperation(), 1.5f, 0.5f, 0.5f, -1f, 1.25f, -1.25f),
-                Arguments.of(new DivideOperation(), 1.5f, 0.5f, 0.5f, -1f, 0.2f, 1.4f));
+        ComplexNumbers result = new ExpressionEvaluator().evaluate(expression);
+
+        assertEquals(27f, result.getRealPart(), 0.0001f);
+        assertEquals(-5f, result.getImaginaryPart(), 0.0001f);
     }
 
-    @ParameterizedTest
-    @MethodSource("individualOperations")
-    void evaluatesDirectlyConstructedExpression(Operation operation, float ar, float ai,
-                                               float br, float bi, float real, float imaginary) {
+    @Test
+    void multiplicationAndDivisionHavePriorityOverAdditionAndSubtraction() {
+        // 20 - 3 * 4 + 8 / 2 = 12
         Expression expression = new Expression(
-                List.of(new ComplexNumbers(ar, ai), new ComplexNumbers(br, bi)), List.of(operation));
-        assertComplex(real, imaginary, evaluator.evaluate(expression));
-    }
+                List.of(new ComplexNumbers(20, 0), new ComplexNumbers(3, 0),
+                        new ComplexNumbers(4, 0), new ComplexNumbers(8, 0),
+                        new ComplexNumbers(2, 0)),
+                List.of(new SubtractOperation(), new MultiplyOperation(),
+                        new AddOperation(), new DivideOperation()));
 
-    static Stream<Arguments> expressions() {
-        // Each operand and operator is a separate command-line argument.
-        return Stream.of(
-                Arguments.of(new String[]{"2+3i", "+", "4-5i"}, 6, -2),
-                Arguments.of(new String[]{"3+4i", "-", "3+4i"}, 0, 0),
-                Arguments.of(new String[]{"1+i", "*", "1-i"}, 2, 0),
-                Arguments.of(new String[]{"3+4i", "/", "1-2i"}, -1, 2),
-                Arguments.of(new String[]{"3+4i", "*", "2-5i", "+", "1+2i"}, 27, -5),
-                Arguments.of(new String[]{"1+2i", "+", "3+4i", "*", "2-5i"}, 27, -5),
-                Arguments.of(new String[]{"10+0i", "-", "3+0i", "-", "2+0i"}, 5, 0),
-                Arguments.of(new String[]{"10+0i", "-", "3+0i", "+", "2+0i"}, 9, 0),
-                Arguments.of(new String[]{"1+i", "*", "1-i", "*", "0+i"}, 0, 2),
-                Arguments.of(new String[]{"-2-3i", "+", "4-i", "-", "-1-2i"}, 3, -2),
-                Arguments.of(new String[]{"0+0i", "*", "-5+2i", "+", "0+0i"}, 0, 0),
-                Arguments.of(new String[]{"8+0i", "/", "2+0i", "/", "2+0i"}, 2, 0),
-                Arguments.of(new String[]{"8+0i", "/", "2+0i", "*", "3+0i"}, 12, 0),
-                Arguments.of(new String[]{"8+0i", "*", "2+0i", "/", "4+0i"}, 4, 0),
-                Arguments.of(new String[]{"1+0i", "+", "8+0i", "/", "2+0i"}, 5, 0),
-                Arguments.of(new String[]{"1+0i", "+", "6+0i", "*", "2+0i", "-", "8+0i", "/", "4+0i"}, 11, 0),
-                Arguments.of(new String[]{"1+0i", "/", "2+0i"}, 0.5f, 0f),
-                Arguments.of(new String[]{"1+i", "/", "2-i"}, 0.2f, 0.6f),
-                Arguments.of(new String[]{"1+0i", "/", "3+0i"}, 0.3333333333f, 0f),
-                Arguments.of(new String[]{"1+0i", "+", "1+0i", "/", "2+0i", "*", "3+0i"}, 2.5f, 0f),
-                Arguments.of(new String[]{"1+0i", "/", "2+0i", "/", "4+0i"}, 0.125f, 0f));
-    }
+        ComplexNumbers result = new ExpressionEvaluator().evaluate(expression);
 
-    @ParameterizedTest
-    @MethodSource("expressions")
-    void integratesParserRegistryAndEvaluator(String[] tokens, float real, float imaginary) {
-        assertComplex(real, imaginary, evaluator.evaluate(parser.parse(tokens)));
+        assertEquals(12f, result.getRealPart(), 0.0001f);
+        assertEquals(0f, result.getImaginaryPart(), 0.0001f);
     }
 
     @Test
-    void singleOperandIsReturnedUnchanged() {
-        ComplexNumbers operand = new ComplexNumbers(-3, 4);
-        assertSame(operand, evaluator.evaluate(new Expression(List.of(operand), List.of())));
+    void evaluatesSubtractionFromLeftToRight() {
+        // (10 - 3) - 2 = 5
+        Expression expression = new Expression(
+                List.of(new ComplexNumbers(10, 0), new ComplexNumbers(3, 0),
+                        new ComplexNumbers(2, 0)),
+                List.of(new SubtractOperation(), new SubtractOperation()));
+
+        ComplexNumbers result = new ExpressionEvaluator().evaluate(expression);
+
+        assertEquals(5f, result.getRealPart(), 0.0001f);
+        assertEquals(0f, result.getImaginaryPart(), 0.0001f);
     }
 
     @Test
-    void evaluationIsRepeatableAndDoesNotConsumeExpression() {
-        Expression expression = parser.parse(new String[]{"1+2i", "+", "3+4i", "*", "2-5i"});
-        List<ComplexNumbers> operands = List.copyOf(expression.getOperands());
-        List<Operation> operations = List.copyOf(expression.getOperations());
-        assertComplex(27, -5, evaluator.evaluate(expression));
-        assertComplex(27, -5, evaluator.evaluate(expression));
-        assertEquals(operands, expression.getOperands());
-        assertEquals(operations, expression.getOperations());
-        assertComplex(1, 2, operands.get(0));
-        assertComplex(3, 4, operands.get(1));
-        assertComplex(2, -5, operands.get(2));
-    }
+    void evaluatesDivisionFromLeftToRight() {
+        // (8 / 2) / 2 = 2
+        Expression expression = new Expression(
+                List.of(new ComplexNumbers(8, 0), new ComplexNumbers(2, 0),
+                        new ComplexNumbers(2, 0)),
+                List.of(new DivideOperation(), new DivideOperation()));
 
-    static Stream<Expression> inconsistentExpressions() {
-        ComplexNumbers one = new ComplexNumbers(1, 0);
-        return Stream.of(
-                new Expression(List.of(), List.of()),
-                new Expression(List.of(), List.of(new AddOperation())),
-                new Expression(List.of(one, one), List.of()),
-                new Expression(List.of(one), List.of(new AddOperation())),
-                new Expression(List.of(one, one), List.of(new AddOperation(), new SubtractOperation())));
-    }
+        ComplexNumbers result = new ExpressionEvaluator().evaluate(expression);
 
-    @ParameterizedTest
-    @MethodSource("inconsistentExpressions")
-    void rejectsIncorrectOperandOperatorCounts(Expression expression) {
-        assertThrows(IllegalArgumentException.class, () -> evaluator.evaluate(expression));
+        assertEquals(2f, result.getRealPart(), 0.0001f);
+        assertEquals(0f, result.getImaginaryPart(), 0.0001f);
     }
-
-    @Test
-    void divisionByZeroPropagatesFailureThroughIntegration() {
-        // No exact exception type is documented; require an unchecked failure.
-        assertThrows(RuntimeException.class,
-                () -> evaluator.evaluate(parser.parse(new String[]{"3+4i", "/", "0+0i"})));
-    }
-
 }

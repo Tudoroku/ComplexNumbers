@@ -1,50 +1,39 @@
 package Parsers;
 
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.MethodSource;
-import java.util.stream.Stream;
+import Numbers.ComplexNumbers;
+import org.junit.jupiter.api.Test;
 
-import static Support.TestSupport.assertComplex;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ComplexParserTest {
-    private final ComplexParser parser = new ComplexParser();
+    @Test
+    void parsesIntegerComponentsWithSigns() {
+        ComplexNumbers number = new ComplexParser().parse("-2-3i");
 
-    @ParameterizedTest
-    @CsvSource({"'2+3i',2,3", "'4-5i',4,-5", "'-2+3i',-2,3", "'-2-3i',-2,-3",
-            "'+2+i',2,1", "'1-i',1,-1", "'0+0i',0,0", "'-0-0i',0,0",
-            "'0-7i',0,-7", "'7+0i',7,0", "'3+4*i',3,4", "'-3-i',-3,-1"})
-    void parsesSupportedIntegerFormsAsFloatComponents(String text, float real, float imaginary) {
-        assertComplex(real, imaginary, assertDoesNotThrow(() -> parser.parse(text)));
+        assertEquals(-2f, number.getRealPart(), 0.0001f);
+        assertEquals(-3f, number.getImaginaryPart(), 0.0001f);
     }
 
-    static Stream<String> whitespaceVariants() {
-        return Stream.of("  -2 + 3i  ", "\t-2\t+\t3*i\t", "\n-2 + 3 i\r\n");
+    @Test
+    void parsesImplicitImaginaryCoefficient() {
+        ComplexNumbers number = new ComplexParser().parse("2+i");
+
+        assertEquals(2f, number.getRealPart(), 0.0001f);
+        assertEquals(1f, number.getImaginaryPart(), 0.0001f);
     }
 
-    @ParameterizedTest
-    @MethodSource("whitespaceVariants")
-    void ignoresWhitespaceWithinAnOperand(String text) {
-        assertComplex(-2, 3, parser.parse(text));
+    @Test
+    void ignoresWhitespaceAndCoefficientAsterisk() {
+        ComplexNumbers number = new ComplexParser().parse(" 2 + 3 * i ");
+
+        assertEquals(2f, number.getRealPart(), 0.0001f);
+        assertEquals(3f, number.getImaginaryPart(), 0.0001f);
     }
 
-    static Stream<String> malformedNumbers() {
-        return Stream.of("", " ", "3", "i", "-i", "2i", "2+3", "2++3i", "2+-3i",
-                "2--3i", "2+3ii", "2+3I", "2+3j", "2.5+3i", "2+0.5i", "abc",
-                "2+3i+4+5i");
-    }
-
-    @ParameterizedTest
-    @MethodSource("malformedNumbers")
-    void rejectsMalformedOrUnsupportedForms(String text) {
-        assertThrows(IllegalArgumentException.class, () -> parser.parse(text));
-    }
-
-    @ParameterizedTest
-    @CsvSource({"'2147483648+0i',2147483648,0", "'0+2147483648i',0,2147483648",
-            "'-2147483649+0i',-2147483648,0"})
-    void parsesComponentsBeyondIntegerRangeWithFloatRounding(String text, float real, float imaginary) {
-        assertComplex(real, imaginary, assertDoesNotThrow(() -> parser.parse(text)));
+    @Test
+    void rejectsMalformedComplexNumber() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new ComplexParser().parse("2++3i"));
     }
 }

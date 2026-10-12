@@ -1,79 +1,85 @@
-# JUnit 5 tests
+# Teste JUnit 5 pentru laboratorul OOP
 
-The existing IntelliJ source roots remain `src/` and `Teste/`. The module's
-test-scoped JUnit5 library uses the standalone JUnit Platform 1.11.4 jar
-(including JUnit Jupiter 5.11.4 and parameterized-test support).
+Suita contine 25 de teste simple in 7 clase. Fiecare metoda foloseste `@Test`
+si verifica un comportament: pregateste obiectele, apeleaza metoda aplicatiei,
+apoi verifica rezultatul. Nu exista teste parametrizate, mocking sau helperi.
 
-Download the dependency once from Maven Central, from the project directory:
+## Organizare
+
+| Package | Clasa | Teste | Ce verifica |
+| --- | --- | ---: | --- |
+| Operations | OperationsTest | 5 | Adunare, scadere, inmultire, impartire cu rezultat fractionar si impartire la zero |
+| Operations | OperatorRegistryTest | 2 | Inregistrarea unui operator si respingerea unui simbol necunoscut |
+| Numbers | ComplexNumbersTest | 3 | Constructor/gettere si afisarea componentelor imaginare pozitive sau negative |
+| Parsers | ComplexParserTest | 4 | Semne, coeficient imaginar implicit, spatii si input malformat |
+| Parsers | ExpressionParserTest | 3 | Construirea expresiei, operator necunoscut si operand invalid |
+| Expressions | ExpressionEvaluatorTest | 4 | Exemplul complet, precedenta si asociativitatea scaderii/impartirii |
+| Validators | ExpressionArgumentsValidatorTest | 4 | Structura valida, argumente lipsa, numar par de argumente si operator gol |
+| **Total** | | **25** | |
+
+Componentele numerelor sunt `float`. Comparatiile numerice folosesc direct
+`assertEquals(expected, actual, 0.0001f)`, pentru a permite mici diferente de
+rotunjire la valorile din aceste exemple. Fiecare rezultat complex este verificat
+prin ambele componente. `toString()` se verifica separat, prin compararea exacta
+a textului, inclusiv spatiile si partea zecimala.
+
+Pentru input invalid, `assertThrows` verifica exceptia. Impartirea la zero
+produce `ArithmeticException`, iar argumentele invalide testate produc
+`IllegalArgumentException`. Testul structurii valide apeleaza direct validatorul:
+va esua daca apelul arunca o exceptie, fara sa fie necesara o asertiune suplimentara.
+
+## Inputul aplicatiei
+
+Fiecare operand si fiecare operator reprezinta un argument separat:
+
+```text
+"3+4i" "*" "2-5i" "+" "1+2i"
+```
+
+Testul complet trece prin parser si evaluator si verifica rezultatul `27-5i`.
+Parserul accepta componente intregi in text, de exemplu `-2-3i`, `2+i` sau
+`3+4*i`. Spatiile din operanzi sunt eliminate, iar operatorii sunt curatati de
+spatiile de la margini. Valorile sunt stocate ca `float`; operatiile pot produce
+rezultate fractionare. Nu sunt testate ca functionalitati acceptate parantezele,
+componentele zecimale in text sau numerele reale/imaginare fara forma completa.
+
+Evaluatorul aplica `*` si `/` inainte de `+` si `-`. Operatorii cu aceeasi
+precedenta se evalueaza de la stanga la dreapta. Exemplele `10 - 3 - 2` si
+`8 / 2 / 2` verifica aceasta ordine fara sa implice suport pentru paranteze in input.
+
+## Rulare
+
+Proiectul foloseste JUnit Jupiter 5.11.4, inclus in JUnit Platform Console
+Standalone 1.11.4. Daca JAR-ul lipseste, descarca-l o singura data din directorul
+proiectului:
 
 ```powershell
 New-Item -ItemType Directory -Path lib -Force
 Invoke-WebRequest -Uri 'https://repo.maven.apache.org/maven2/org/junit/platform/junit-platform-console-standalone/1.11.4/junit-platform-console-standalone-1.11.4.jar' -OutFile 'lib\junit-platform-console-standalone-1.11.4.jar'
 ```
 
-Run all tests:
+Ruleaza toate testele din directorul proiectului:
 
 ```powershell
 .\run-tests.ps1
-# Or select an installed JDK explicitly:
+```
+
+Optional, selecteaza explicit un JDK instalat:
+
+```powershell
 .\run-tests.ps1 -JdkHome 'C:\Users\tudor\.jdks\openjdk-27'
 ```
 
-The runner compiles production and tests separately, discovers all test classes,
-and writes XML reports to a fresh directory under `out/junit/`, printed at
-startup. It returns a nonzero exit status for compilation or test failures.
-In IntelliJ, reload the module/library configuration and run the `Teste` folder.
+Scriptul compileaza separat `src/` si `Teste/`, descopera testele si afiseaza
+rezumatul executiei. Clasele compilate si rapoartele XML sunt scrise intr-un
+director nou sub `out/junit/`, a carui cale apare in consola. Codul de iesire
+este 0 pentru succes si nenul pentru erori de compilare sau teste esuate.
+In IntelliJ, pastreaza `src/` ca sursa si `Teste/` ca sursa de teste, cu biblioteca
+JUnit 5 configurata, apoi ruleaza directorul `Teste/`.
 
-## Actual input grammar
-
-`Main` passes command-line arguments directly to `ExpressionParser.parse(String[])`.
-Each complex operand is one argument, and each binary operator is a separate
-argument. For example:
-
-```text
-"3+4i" "*" "2-5i" "+" "1+2i"
-```
-
-This represents the product of 3+4i and 2-5i followed by adding 1+2i; the
-independently calculated result is 27-5i. All five requested reference cases
-are expressible in this grammar and covered at operation and integration levels.
-
-The parser's current regular expression requires an integer-form real component,
-an imaginary sign, an optional nonnegative integer-form coefficient, and
-lowercase `i`. These components are stored as floats. Examples: `-2-3i`,
-`+2+i`, `0+0i`, and `3+4*i`. Whitespace inside an operand is removed;
-operator arguments are trimmed. Quote operands containing spaces in the shell.
-The parser removes asterisks inside operand arguments; multiplication between
-operands still needs a separate `"*"` argument.
-
-Bare reals, bare imaginary numbers, decimal components, a whole expression in
-one argument, and unregistered operators are unsupported. The application
-intentionally does not accept parenthesized input; no test requires it.
-Although `Float.parseFloat` is now used, the regular expression still rejects
-decimal points and exponent notation. Fractional constructor/operation tests
-therefore use the float API directly; integration tests obtain fractional
-results by dividing operands in the supported input grammar.
-
-The parser preserves operator order. The evaluator applies multiplication and
-division (precedence 2) before addition and subtraction (precedence 1), and
-equal-precedence operations associate left to right.
-
-## Test expectations
-
-Expected arithmetic results are literal independently calculated values.
-Complex results are checked by both float components. The shared assertion uses
-an absolute tolerance of `1e-6f` near zero and a relative tolerance of `1e-6f`
-for larger expected values; `1e-9` would be too strict for general float
-arithmetic. Cases cover fractional inputs, decimal rounding such as
-0.1 + 0.2, and nonintegral division including one third. Constructors also
-cover finite float extremes, with exact checks for the smallest nonzero float.
-Parser cases beyond the integer range now expect successful float parsing and
-float rounding, rather than an integer overflow exception.
-
-No exact division-by-zero exception contract exists, so
-tests require an unchecked failure without prescribing a specific subtype.
-
-Production bugs must remain failing tests. Zero division and truncation of
-negative fractional imaginary components in `toString()` remain covered.
-String expectations follow the existing whole-number formatting while
-requiring fractional magnitudes to be preserved.
+Suita este intentionat restransa la exemple reprezentative pentru laborator.
+Au fost eliminate combinatiile repetitive, verificarea identitatii obiectelor,
+partajarea listelor si cazurile extreme de float. Rezultatele asteptate sunt
+calculate independent; un test esuat trebuie investigat, nu ajustat pentru a
+ascunde o eroare din implementare. Rezumatul si rapoartele fiecarei executii
+inlocuiesc vechiul raport static, care nu mai descria versiunea curenta.
