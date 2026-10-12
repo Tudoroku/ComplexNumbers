@@ -3,6 +3,7 @@ package Expressions;
 import Numbers.ComplexNumbers;
 import Operations.*;
 import Parsers.*;
+import Validators.ExpressionArgumentsValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -15,7 +16,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ExpressionEvaluatorTest {
     private final ExpressionEvaluator evaluator = new ExpressionEvaluator();
-    private final ExpressionParser parser = new ExpressionParser(new ComplexParser(), registry());
+    private final ExpressionArgumentsValidator validator = new ExpressionArgumentsValidator();
+    private final ExpressionParser parser = new ExpressionParser(new ComplexParser(), registry(), validator);
 
     static Stream<Arguments> individualOperations() {
         return Stream.of(

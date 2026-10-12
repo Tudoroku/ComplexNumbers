@@ -5,6 +5,8 @@ import Numbers.ComplexNumbers;
 import Operations.Operation;
 import Operations.OperatorRegistry;
 
+import Validators.Validator;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,16 +14,21 @@ public class ExpressionParser {
 
     private final ComplexParser complexParser;
     private final OperatorRegistry operatorRegistry;
+    private final Validator<String[]> validator;
 
     public ExpressionParser(
             ComplexParser complexParser,
-            OperatorRegistry operatorRegistry) {
+            OperatorRegistry operatorRegistry,
+            Validator<String[]> validator) {
 
         this.complexParser = complexParser;
         this.operatorRegistry = operatorRegistry;
+        this.validator = validator;
     }
 
     public Expression parse(String[] args) {
+
+        validator.validate(args);
 
         if (args == null || args.length == 0) {
             throw new IllegalArgumentException(

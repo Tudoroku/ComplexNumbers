@@ -4,6 +4,7 @@ import Expressions.Expression;
 import Expressions.ExpressionEvaluator;
 import Operations.Operation;
 import Operations.OperatorRegistry;
+import Validators.ExpressionArgumentsValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -16,7 +17,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ExpressionParserTest {
     private final OperatorRegistry registry = registry();
-    private final ExpressionParser parser = new ExpressionParser(new ComplexParser(), registry);
+    private final ExpressionArgumentsValidator validator = new ExpressionArgumentsValidator();
+    private final ExpressionParser parser = new ExpressionParser(new ComplexParser(), registry, validator);
 
     @ParameterizedTest
     @ValueSource(strings = {"+", "-", "*", "/"})
@@ -80,7 +82,7 @@ class ExpressionParserTest {
 
     @Test
     void acceptsOnlyOperatorsPresentInInjectedRegistry() {
-        ExpressionParser restricted = new ExpressionParser(new ComplexParser(), new OperatorRegistry());
+        ExpressionParser restricted = new ExpressionParser(new ComplexParser(), new OperatorRegistry(), new ExpressionArgumentsValidator());
         assertThrows(IllegalArgumentException.class,
                 () -> restricted.parse(new String[]{"1+0i", "+", "2+0i"}));
         assertDoesNotThrow(() -> restricted.parse(new String[]{"1+0i"}));

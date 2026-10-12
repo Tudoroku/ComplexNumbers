@@ -31,10 +31,7 @@ public class ExpressionEvaluator {
             Operation currentOperation =
                     expression.getOperations().get(i);
 
-            /*
-             * Executam operatorii care au prioritate
-             * mai mare sau egala cu operatorul curent.
-             */
+
             while (!operations.isEmpty()
                     && operations.peek().getPrecedence()
                     >= currentOperation.getPrecedence()) {
@@ -49,7 +46,7 @@ public class ExpressionEvaluator {
             );
         }
 
-        // Executam operatorii ramasi
+
         while (!operations.isEmpty()) {
             applyTopOperation(values, operations);
         }
@@ -69,14 +66,7 @@ public class ExpressionEvaluator {
 
         Operation operation = operations.pop();
 
-        /*
-         * Stack-ul este LIFO!
-         *
-         * Pentru A - B:
-         *
-         * pop() -> B = right
-         * pop() -> A = left
-         */
+
         ComplexNumbers right = values.pop();
         ComplexNumbers left = values.pop();
 

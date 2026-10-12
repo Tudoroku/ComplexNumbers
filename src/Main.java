@@ -4,6 +4,7 @@ import Parsers.ExpressionParser;
 import Numbers.ComplexNumbers;
 import Operations.*;
 import Parsers.ComplexParser;
+import Validators.ExpressionArgumentsValidator;
 
 public class Main {
 
@@ -18,10 +19,13 @@ public class Main {
 
         ComplexParser complexParser = new ComplexParser();
 
+        ExpressionArgumentsValidator validator = new ExpressionArgumentsValidator();
+
         ExpressionParser parser =
                 new ExpressionParser(
                         complexParser,
-                        registry
+                        registry,
+                        validator
                 );
 
         ExpressionEvaluator evaluator =

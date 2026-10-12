@@ -16,8 +16,8 @@ class ComplexNumbersTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"2,3,'2.0 + 3.0i'", "2,-3,'2.0 - 3i'", "-2,3,'-2.0 + 3.0i'",
-            "-2,-3,'-2.0 - 3i'", "0,0,'0.0 + 0.0i'", "0,-1,'0.0 - 1i'",
+    @CsvSource({"2,3,'2.0 + 3.0i'", "2,-3,'2.0 - 3.0i'", "-2,3,'-2.0 + 3.0i'",
+            "-2,-3,'-2.0 - 3.0i'", "0,0,'0.0 + 0.0i'", "0,-1,'0.0 - 1.0i'",
             "4,0,'4.0 + 0.0i'", "2.5,0.75,'2.5 + 0.75i'"})
     void stringRepresentsSignsAndZero(float real, float imaginary, String expected) {
         assertEquals(expected, new ComplexNumbers(real, imaginary).toString());
